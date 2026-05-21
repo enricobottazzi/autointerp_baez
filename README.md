@@ -28,7 +28,14 @@ For the queried SAE feature, execute the following steps:
 
 ### `autointerp_baez`
 
-`autointerp_baez` takes 20 NLA explanations, each paired with an activation score normalized to an integer `0-10`.
+`autointerp_baez` takes 20 NLA explanations, each paired with an activation score normalized to an integer `0-10`. 
+
+Score normalization:
+```text
+score = ceil(raw_activation * 10 / max_activation)
+```
+
+where `max_activation` is the maximum activation score of the 20 examples.
 
 It sends one chat-completion request at temperature `0.7`:
 
@@ -42,6 +49,8 @@ The final model response must end with:
 ```
 
 Only the text after `[EXPLANATION]:` is returned.
+
+The logic resembles Eleuther's [acts_top20](https://www.neuronpedia.org/explanation-type/eleuther_acts_top20) autointerp method but of course using NLA explanations instead of top-activating examples.
 
 ## How to use
 

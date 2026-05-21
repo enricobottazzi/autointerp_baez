@@ -4,11 +4,14 @@ from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from math import ceil
 from urllib.error import HTTPError
+from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 
 MODEL_ID = "gemma-3-27b-it"
 LAYER = "41-gemmascope-2-res-262k"
+NLA_SOURCE_ID = "kitft-l41"
+BASE_URL = "https://www.neuronpedia.org"
 EXPLANATION_MARKER = "[EXPLANATION]:"
 
 SYSTEM_PROMPT = """You are a meticulous AI researcher conducting an investigation into patterns found in language. Your task is to analyze text examples and provide a concise explanation that captures the shared pattern.
@@ -28,7 +31,7 @@ You will be given 20 text examples. Each example has one activation value from 1
 
 
 @dataclass(frozen=True)
-class ActivationExample:
+class NLAExplanation:
     text: str
     activation: int
 
@@ -36,7 +39,7 @@ class ActivationExample:
 def normalize_activation(raw_activation: float, max_activation: float) -> int:
     return ceil(raw_activation * 10 / max_activation)
 
-def build_user_prompt(examples: list[ActivationExample]) -> str:
+def build_user_prompt(examples: list[NLAExplanation]) -> str:
     if len(examples) != 20:
         raise ValueError("expected exactly 20 examples")
     return "\n\n".join(
@@ -61,9 +64,67 @@ def load_env(path: str = ".env") -> None:
                 os.environ[key] = value
 
 
-def nla(index: str) -> list[ActivationExample]:
-    """TODO: fetch top activations, truncate at max token, call Neuronpedia NLA."""
-    raise NotImplementedError(f"NLA fetch not implemented for feature {index}")
+def nla(index: str) -> list[NLAExplanation]:
+    api_key = os.environ["NEURONPEDIA_API_KEY"]
+    feature = fetch_neuronpedia_feature(api_key, index)
+    activations = sorted(
+        feature.get("activations", []),
+        key=lambda item: item.get("maxValue", float("-inf")),
+        reverse=True,
+    )[:20]
+    max_activation = max(item["maxValue"] for item in activations)
+    return [
+        NLAExplanation(
+            text=" | ".join(filter(None, nla_descriptions(api_key, activation))),
+            activation=normalize_activation(activation["maxValue"], max_activation),
+        )
+        for activation in activations
+    ]
+
+
+def fetch_neuronpedia_feature(api_key: str, index: str) -> dict:
+    parts = (MODEL_ID, LAYER, index)
+    path = "/api/feature/" + "/".join(quote(part, safe="") for part in parts)
+    request = Request(f"{BASE_URL}{path}", headers={"x-api-key": api_key, "Accept": "application/json"})
+    with urlopen(request, timeout=30) as response:
+        return json.loads(response.read())
+
+
+def nla_descriptions(api_key: str, activation: dict) -> list[str | None]:
+    text, position = trim_to_max_token(activation)
+    payload = post_neuronpedia(
+        api_key,
+        "/api/nla/explain",
+        {
+            "modelId": MODEL_ID,
+            "nlaSourceId": NLA_SOURCE_ID,
+            "text": text,
+            "positions": [position],
+            "temperature": 0.7,
+        },
+    )
+    return [item.get("description") for item in payload.get("results", [])]
+
+
+def trim_to_max_token(activation: dict) -> tuple[str, int]:
+    tokens = activation.get("tokens", [])
+    index = min(activation.get("maxValueTokenIndex", 0), len(tokens) - 1)
+    return "".join(tokens[: index + 1]), index
+
+
+def post_neuronpedia(api_key: str, path: str, payload: dict) -> dict:
+    request = Request(
+        f"{BASE_URL}{path}",
+        data=json.dumps(payload).encode(),
+        headers={
+            "x-api-key": api_key,
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    with urlopen(request, timeout=60) as response:
+        return json.loads(response.read())
 
 
 def call_openrouter(model: str, messages: list[dict[str, str]]) -> str:
