@@ -1,4 +1,4 @@
-# autointerp-baez
+# autointerp_baez
 
 `autointerp_baez` is a autointerp method that generates a natural-language label for a SAE feature using [NLA](https://transformer-circuits.pub/2026/nla/index.html#nla-training) explanations.
 
