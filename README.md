@@ -14,7 +14,7 @@ The method proposed here is similar but uses NLA explanations instead of top-act
 top-activating examples -> [ NLA ] -> NLA explanations -> [ autointerp_baez ] -> label
 ```
 
-## `autointerp_baez` methodology specs
+## SPECS
 
 Requirement: the SAE feature for which the label is to be generated must belong to `gemma-3-27b-it/41-gemmascope-2-res-262k` as this is the only model and layer for which an NLA has been trained.
 
@@ -26,7 +26,7 @@ For the queried SAE feature, execute the following steps:
 2. Truncate each example up to the token that maximizes the activation.
 3. For each example, feed it to the [NLA API](https://www.neuronpedia.org/api-doc#tag/nla/POST/api/nla/explain) and obtain the NLA explanation associated with the last token
 
-### `autointerp_baez`
+### Autointerp
 
 `autointerp_baez` takes 20 NLA explanations, each paired with an activation score normalized to an integer `0-10`. 
 
