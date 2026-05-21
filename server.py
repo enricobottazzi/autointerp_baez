@@ -14,20 +14,19 @@ NLA_SOURCE_ID = "kitft-l41"
 BASE_URL = "https://www.neuronpedia.org"
 EXPLANATION_MARKER = "[EXPLANATION]:"
 
-SYSTEM_PROMPT = """You are a meticulous AI researcher conducting an investigation into patterns found in language. Your task is to analyze text examples and provide a concise explanation that captures the shared pattern.
-
+SYSTEM_PROMPT = """You are a meticulous AI researcher conducting an important investigation into patterns found in language. Your task is to analyze text and provide an short and concise label that thoroughly encapsulates possible patterns found in it.
 Guidelines:
 
 You will be given 20 text examples. Each example has one activation value from 1 to 10, where higher values indicate stronger relevance to the latent/feature being explained.
 
-- Produce a concise final description of the text pattern common to the examples.
+- Produce a very concise final label. Simply describe the text latent common in the examples, and what pattern you found.
 - Give more weight to examples with higher activation values.
-- If some examples are uninformative, ignore them.
-- Do not make lists of possible explanations.
-- Keep the explanation short and specific.
+- If the examples are uninformative, you don't need to mention them.
+- Do not make lists of possible explanations. Keep your explanation short and concise.
+- The final label must be at most 8 words.
 - The last line of your response must be formatted exactly as:
 
-[EXPLANATION]: <your explanation>"""
+[EXPLANATION]: <explanation>"""
 
 
 @dataclass(frozen=True)

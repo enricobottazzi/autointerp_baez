@@ -78,7 +78,7 @@ curl -X POST http://localhost:8000/api/explanation/generate \
   -H "Content-Type: application/json" \
   -d '{
     "index": "43",
-    "explanationModelName": "openai/gpt-4o-mini"
+    "explanationModelName": "google/gemini-2.5-flash-lite"
   }'
 ```
 
