@@ -1,38 +1,15 @@
 import argparse
-import json
 import os
 import random
-import sys
-from datetime import datetime, timezone
 from pathlib import Path
 from urllib.error import HTTPError
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from utils import DEFAULT_OUT_DIR, append_jsonl, feature_key, save_json, utc_now
 
 from server import LAYER, MODEL_ID, fetch_neuronpedia_feature, load_env
 
 
 FEATURE_SPACE_SIZE = 262_000
-DEFAULT_OUT_DIR = "data/experiments/default"
-
-
-def utc_now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-def append_jsonl(path: Path, record: dict) -> None:
-    with path.open("a") as file:
-        file.write(json.dumps(record, sort_keys=True) + "\n")
-
-
-def feature_key(index: int) -> str:
-    return f"{MODEL_ID}/{LAYER}/{index}"
-
-
-def save_json(path: Path, payload: dict) -> None:
-    with path.open("w") as file:
-        json.dump(payload, file, indent=2, sort_keys=True)
-        file.write("\n")
 
 
 def sample_features(count: int, out_dir: Path, max_index: int, seed: int | None) -> None:
@@ -66,6 +43,9 @@ def sample_features(count: int, out_dir: Path, max_index: int, seed: int | None)
                 print(f"MISS {index}")
                 continue
             raise
+        if not feature.get("activations"):
+            print(f"MISS {index} (no activations)")
+            continue
 
         raw_path = raw_dir / f"feature_{index}.json"
         save_json(raw_path, feature)

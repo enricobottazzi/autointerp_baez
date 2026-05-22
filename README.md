@@ -61,3 +61,9 @@ python experiment/sample_features.py 100 --out-dir data/experiments/exp_1 --seed
 ```
 
 ### 2. Generate NLA explanations
+
+Fetch NLA-derived examples for the sampled features:
+
+```sh
+python experiment/fetch_nla.py --out-dir data/experiments/exp_1
+```
