@@ -35,7 +35,7 @@ Score normalization:
 score = ceil(raw_activation * 10 / max_activation)
 ```
 
-where `max_activation` is the maximum activation score of the 20 examples.
+where `max_activation` is the maximum activation score across the 20 examples.
 
 It sends one chat-completion request at temperature `0.7`:
 
