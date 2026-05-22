@@ -17,9 +17,13 @@ def fetch_nla(out_dir: Path) -> None:
         raise ValueError(f"no features found in {out_dir / 'features.jsonl'}")
 
     nla_path = out_dir / "nla_examples.jsonl"
-    nla_path.write_text("")
+    fetched = {record["feature_key"] for record in read_jsonl(nla_path)}
 
     for i, feature in enumerate(features, 1):
+        if feature["feature_key"] in fetched:
+            print(f"SKIP {feature['index']} ({i}/{len(features)})")
+            continue
+
         index = str(feature["index"])
         examples = nla(index)
         append_jsonl(
