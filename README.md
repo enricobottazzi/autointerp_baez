@@ -62,8 +62,18 @@ python experiment/sample_features.py 100 --out-dir data/experiments/exp_1 --seed
 
 ### 2. Generate NLA explanations
 
-Fetch NLA-derived examples for the sampled features:
+Fetch NLA-derived examples for the sampled features (resumable):
 
 ```sh
 python experiment/fetch_nla.py --out-dir data/experiments/exp_1
 ```
+
+### 3. Generate labels
+
+Generate Neuronpedia labels for each sampled feature with the configured methods (resumable):
+
+```sh
+python experiment/generate_labels.py --out-dir data/experiments/exp_1
+```
+
+Notice that this script will fail if the label for a given combination of `modelId`, `layer`, `index`, `explanationType`, and `explanationModelName` has already been generated.

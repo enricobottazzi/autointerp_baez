@@ -3,7 +3,7 @@ import os
 from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from math import ceil
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.parse import quote
 from urllib.request import Request, urlopen
 
@@ -135,8 +135,16 @@ def call_openrouter(model: str, messages: list[dict[str, str]]) -> str:
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         method="POST",
     )
-    with urlopen(request, timeout=60) as response:
-        payload = json.loads(response.read())
+    try:
+        with urlopen(request, timeout=60) as response:
+            payload = json.loads(response.read())
+    except HTTPError as error:
+        raise RuntimeError(
+            f"OpenRouter failed HTTP {error.code} for model={model}: "
+            f"{error.read().decode(errors='replace')}"
+        ) from error
+    except URLError as error:
+        raise RuntimeError(f"OpenRouter failed for model={model}: {error.reason}") from error
     return payload["choices"][0]["message"]["content"]
 
 

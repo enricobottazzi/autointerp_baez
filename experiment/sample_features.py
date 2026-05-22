@@ -69,11 +69,10 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Sample random Neuronpedia features.")
     parser.add_argument("count", type=int, help="Number of valid features to sample.")
     parser.add_argument("--out-dir", default=DEFAULT_OUT_DIR)
-    parser.add_argument("--max-index", type=int, default=FEATURE_SPACE_SIZE)
     parser.add_argument("--seed", type=int)
     args = parser.parse_args()
 
-    sample_features(args.count, Path(args.out_dir), args.max_index, args.seed)
+    sample_features(args.count, Path(args.out_dir), FEATURE_SPACE_SIZE, args.seed)
 
 
 if __name__ == "__main__":
