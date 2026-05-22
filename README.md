@@ -1,60 +1,12 @@
 # autointerp_baez
 
-`autointerp_baez` is a autointerp method that generates a natural-language label for a SAE feature using [NLA](https://transformer-circuits.pub/2026/nla/index.html#nla-training) explanations.
-
-Let's take a step back. Autointerp methods are used to generate natural-language labels for [SAE features](https://adamkarvonen.github.io/machine_learning/2024/06/11/sae-intuitions.html#fn:1). Current [autointerp methods](https://blog.eleuther.ai/autointerp/) work by feeding the top-activating examples for a given SAE feature to an LLM and asking them to find a common thread across these examples in natural-language, the label.
-
-```text
-top-activating examples -> [ Autointerp ] -> label
-```
-
-The method proposed here is similar but uses NLA explanations instead of top-activating examples.
-
-```text
-top-activating examples -> [ NLA ] -> NLA explanations -> [ autointerp_baez ] -> label
-```
-
-## SPECS
-
-Requirement: the SAE feature for which the label is to be generated must belong to `gemma-3-27b-it/41-gemmascope-2-res-262k` as this is the only model and layer for which an NLA has been trained.
-
-### NLA
-
-For the queried SAE feature, execute the following steps:
-
-1. Fetch the top 20 activation examples from Neuronpedia.
-2. Truncate each example up to the token that maximizes the activation.
-3. For each example, feed it to the [NLA API](https://www.neuronpedia.org/api-doc#tag/nla/POST/api/nla/explain) and obtain the NLA explanation associated with the last token
-
-### Autointerp
-
-`autointerp_baez` takes 20 NLA explanations, each paired with an activation score normalized to an integer `0-10`. 
-
-Score normalization:
-```text
-score = ceil(raw_activation * 10 / max_activation)
-```
-
-where `max_activation` is the maximum activation score across the 20 examples.
-
-It sends one chat-completion request at temperature `0.7`:
-
-- `system`: instruct the model to find the shared language pattern and return one concise label.
-- `user`: list the 20 NLA explanations as examples with their activation scores.
-
-The final model response must end with:
-
-```text
-[EXPLANATION]: <label>
-```
-
-Only the text after `[EXPLANATION]:` is returned.
-
-The logic resembles Eleuther's [acts_top20](https://www.neuronpedia.org/explanation-type/eleuther_acts_top20) autointerp method but of course using NLA explanations instead of top-activating examples.
+Specs and experiment results available [here](https://docs.google.com/document/d/1PO22yjObWHlsV88DrZJdJZHCjWJYKRkYaurWRX3p0R0/edit?usp=sharing).
 
 ## How to use
 
 This repo exposes a minimal autointerp service for generating a natural-language label for a Neuronpedia feature based on NLA explanations.
+
+Requirement: the SAE feature for which the label is to be generated must belong to `gemma-3-27b-it/41-gemmascope-2-res-262k` as this is the only model and layer for which an NLA is available.
 
 As a user, you need to:
 
