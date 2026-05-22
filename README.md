@@ -46,3 +46,18 @@ Expected response:
   "explanation": "<natural-language explanation>"
 }
 ```
+
+## Running an experiment
+
+Experiment scripts write local artifacts under `data/experiments/<name>/`.
+
+### 1. Sampling features
+
+
+Sample `100` random features from the `gemma-3-27b-it/41-gemmascope-2-res-262k` search space:
+
+```sh
+python experiment/sample_features.py 100 --out-dir data/experiments/exp_1 --seed 0
+```
+
+### 2. Generate NLA explanations
