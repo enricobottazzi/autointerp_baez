@@ -17,7 +17,7 @@ EXPLANATION_MARKER = "[EXPLANATION]:"
 SYSTEM_PROMPT = """You are a meticulous AI researcher conducting an important investigation into patterns found in language. Your task is to analyze text and provide an short and concise label that thoroughly encapsulates possible patterns found in it.
 Guidelines:
 
-You will be given 20 text examples. Each example has one activation value from 1 to 10, where higher values indicate stronger relevance to the latent/feature being explained.
+You will be given up to 20 text examples. Each example has one activation value from 1 to 10, where higher values indicate stronger relevance to the latent/feature being explained.
 
 - Produce a very concise final label. Simply describe the text latent common in the examples, and what pattern you found.
 - Give more weight to examples with higher activation values.
@@ -40,8 +40,8 @@ def normalize_activation(raw_activation: float, max_activation: float) -> int:
     return ceil(raw_activation * 10 / max_activation) 
 
 def build_user_prompt(examples: list[NLAExplanation]) -> str:
-    if len(examples) != 20:
-        raise ValueError("expected exactly 20 examples")
+    if not examples:
+        raise ValueError("expected at least one example")
     return "\n\n".join(
         f"Example {i}: {example.text}\nActivation: {example.activation}"
         for i, example in enumerate(examples, 1)
@@ -68,11 +68,13 @@ def nla(index: str) -> list[NLAExplanation]:
     api_key = os.environ["NEURONPEDIA_API_KEY"]
     feature = fetch_neuronpedia_feature(api_key, index)
     activations = sorted(
-        feature.get("activations", []),
-        key=lambda item: item.get("maxValue", float("-inf")),
+        (item for item in feature.get("activations", []) if item.get("maxValue", 0) > 0),
+        key=lambda item: item["maxValue"],
         reverse=True,
     )[:20]
-    max_activation = max(item["maxValue"] for item in activations)
+    if not activations:
+        raise ValueError(f"no activating examples for index={index}")
+    max_activation = activations[0]["maxValue"]
     return [
         NLAExplanation(
             text=" | ".join(filter(None, nla_descriptions(api_key, activation))),

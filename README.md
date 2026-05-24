@@ -10,20 +10,26 @@ Requirement: the SAE feature for which the label is to be generated must belong 
 
 As a user, you need to:
 
-1. Add API keys to `.env`:
+1. Install dependencies:
+
+```sh
+pip install -r requirements.txt
+```
+
+2. Add API keys to `.env`:
 
 ```env
 NEURONPEDIA_API_KEY=<your-neuronpedia-api-key>
 OPENROUTER_API_KEY=<your-openrouter-api-key>
 ```
 
-2. Launch the server:
+3. Launch the server:
 
 ```sh
 python server.py
 ```
 
-3. Request an autointerp explanation for a feature with an API call shaped like Neuronpedia's explanation generate [endpoint](https://www.neuronpedia.org/api-doc#tag/explanations/POST/api/explanation/generate):
+4. Request an autointerp explanation for a feature with an API call shaped like Neuronpedia's explanation generate [endpoint](https://www.neuronpedia.org/api-doc#tag/explanations/POST/api/explanation/generate):
 
 ```sh
 curl -X POST http://localhost:8000/api/explanation/generate \
@@ -70,10 +76,12 @@ python experiment/fetch_nla.py --out-dir data/experiments/exp_1
 
 ### 3. Generate labels
 
-Generate Neuronpedia labels for each sampled feature with the configured methods (resumable):
+Generate Neuronpedia labels for each sampled feature with two methods:
+- `baez`
+- [`eleuther_acts_top20`](https://www.neuronpedia.org/explanation-type/eleuther_acts_top20)
+
+Note that the NLA explanations are only used for the `baez` method.
 
 ```sh
 python experiment/generate_labels.py --out-dir data/experiments/exp_1
 ```
-
-Notice that this script will fail if the label for a given combination of `modelId`, `layer`, `index`, `explanationType`, and `explanationModelName` has already been generated.
