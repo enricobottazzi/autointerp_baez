@@ -60,10 +60,10 @@ Experiment scripts write local artifacts under `data/experiments/<name>/`.
 ### 1. Sampling features
 
 
-Sample `100` random features from the `gemma-3-27b-it/41-gemmascope-2-res-262k` search space:
+Sample `50` random features (the requirement is that feature must have at least 20 activation examples) from the `gemma-3-27b-it/41-gemmascope-2-res-262k` search space:
 
 ```sh
-python experiment/sample_features.py 100 --out-dir data/experiments/exp_1 --seed 0
+python experiment/sample_features.py 50 --out-dir data/experiments/exp_1 --seed 0
 ```
 
 ### 2. Generate NLA explanations

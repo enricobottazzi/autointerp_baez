@@ -10,6 +10,7 @@ from server import LAYER, MODEL_ID, fetch_neuronpedia_feature, load_env
 
 
 FEATURE_SPACE_SIZE = 262_000
+MIN_ACTIVATIONS = 20
 
 
 def sample_features(count: int, out_dir: Path, max_index: int, seed: int | None) -> None:
@@ -43,8 +44,9 @@ def sample_features(count: int, out_dir: Path, max_index: int, seed: int | None)
                 print(f"MISS {index}")
                 continue
             raise
-        if not feature.get("activations"):
-            print(f"MISS {index} (no activations)")
+        n_acts = len(feature.get("activations") or [])
+        if n_acts < MIN_ACTIVATIONS:
+            print(f"MISS {index} ({n_acts} activations < {MIN_ACTIVATIONS})")
             continue
 
         raw_path = raw_dir / f"feature_{index}.json"
