@@ -37,7 +37,7 @@ class NLAExplanation:
 
 def normalize_activation(raw_activation: float, max_activation: float) -> int:
     # score = ceil(raw_activation * 10 / max_activation) where max_activation is the maximum activation score across the 20 examples
-    return ceil(raw_activation * 10 / max_activation) 
+    return min(10, ceil(raw_activation * 10 / max_activation))
 
 def build_user_prompt(examples: list[NLAExplanation]) -> str:
     if not examples:
