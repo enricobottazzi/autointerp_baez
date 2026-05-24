@@ -77,12 +77,21 @@ python experiment/fetch_nla.py --out-dir data/experiments/exp_1
 
 ### 3. Generate labels
 
-Generate Neuronpedia labels for each sampled feature with two methods:
+Generate Neuronpedia labels for each sampled feature with three methods:
 - `baez`
+- `baez_last`
 - [`eleuther_acts_top20`](https://www.neuronpedia.org/explanation-type/eleuther_acts_top20)
 
-Note that the NLA explanations are only used for the `baez` method.
+Note that the NLA explanations are only used for the `baez` and `baez_last` method.
 
 ```sh
 python experiment/generate_labels.py --out-dir data/experiments/exp_1
+```
+
+### 4. Score labels
+
+Score each (feature, label) with Delphi's `detection`, `fuzz`, and `embedding` scorers. Non-activating examples are sampled cross-feature from the same experiment's `raw/`.
+
+```sh
+python experiment/score_labels.py --out-dir data/experiments/exp_1 --seed 0
 ```

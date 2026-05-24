@@ -1,2 +1,3 @@
 eai-delphi @ git+https://github.com/EleutherAI/delphi
 torch
+sentence-transformers
