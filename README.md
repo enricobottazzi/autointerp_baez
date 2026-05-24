@@ -36,11 +36,12 @@ curl -X POST http://localhost:8000/api/explanation/generate \
   -H "Content-Type: application/json" \
   -d '{
     "index": "43",
+    "n": 20,
     "explanationModelName": "google/gemini-2.5-flash-lite"
   }'
 ```
 
-Notice that `modelId`  and `layer` are set by default to `gemma-3-27b-it` and `41-gemmascope-2-res-262k`. `explanationModelName` is the OpenRouter model ID used to generate the explanation.
+Notice that `modelId`  and `layer` are set by default to `gemma-3-27b-it` and `41-gemmascope-2-res-262k`. `n` is the number of top activation examples used to generate the label. `explanationModelName` is the OpenRouter model ID used to generate the explanation.
 
 Expected response:
 
@@ -60,7 +61,7 @@ Experiment scripts write local artifacts under `data/experiments/<name>/`.
 ### 1. Sampling features
 
 
-Sample `50` random features (the requirement is that feature must have at least 20 activation examples) from the `gemma-3-27b-it/41-gemmascope-2-res-262k` search space:
+Sample `50` random features (each feature must have at least 15 non-zero activation examples) from the `gemma-3-27b-it/41-gemmascope-2-res-262k` search space:
 
 ```sh
 python experiment/sample_features.py 50 --out-dir data/experiments/exp_1 --seed 0
@@ -68,7 +69,7 @@ python experiment/sample_features.py 50 --out-dir data/experiments/exp_1 --seed 
 
 ### 2. Generate NLA explanations
 
-Fetch NLA-derived examples for the sampled features (resumable):
+Fetch NLA-derived examples for the sampled features (resumable) (only uses top 5 activation examples for each feature):
 
 ```sh
 python experiment/fetch_nla.py --out-dir data/experiments/exp_1

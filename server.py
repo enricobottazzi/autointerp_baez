@@ -14,10 +14,10 @@ NLA_SOURCE_ID = "kitft-l41"
 BASE_URL = "https://www.neuronpedia.org"
 EXPLANATION_MARKER = "[EXPLANATION]:"
 
-SYSTEM_PROMPT = """You are a meticulous AI researcher conducting an important investigation into patterns found in language. Your task is to analyze text and provide an short and concise label that thoroughly encapsulates possible patterns found in it.
+SYSTEM_PROMPT_TEMPLATE = """You are a meticulous AI researcher conducting an important investigation into patterns found in language. Your task is to analyze text and provide an short and concise label that thoroughly encapsulates possible patterns found in it.
 Guidelines:
 
-You will be given up to 20 text examples. Each example has one activation value from 1 to 10, where higher values indicate stronger relevance to the latent/feature being explained.
+You will be given up to {n} text examples. Each example has one activation value from 1 to 10, where higher values indicate stronger relevance to the latent/feature being explained.
 
 - Produce a very concise final label. Simply describe the text latent common in the examples, and what pattern you found.
 - Give more weight to examples with higher activation values.
@@ -36,8 +36,13 @@ class NLAExplanation:
 
 
 def normalize_activation(raw_activation: float, max_activation: float) -> int:
-    # score = ceil(raw_activation * 10 / max_activation) where max_activation is the maximum activation score across the 20 examples
+    # score = ceil(raw_activation * 10 / max_activation) where max_activation is the maximum activation score across the n examples
     return min(10, ceil(raw_activation * 10 / max_activation))
+
+
+def build_system_prompt(n: int) -> str:
+    return SYSTEM_PROMPT_TEMPLATE.format(n=n)
+
 
 def build_user_prompt(examples: list[NLAExplanation]) -> str:
     if not examples:
@@ -64,14 +69,14 @@ def load_env(path: str = ".env") -> None:
                 os.environ[key] = value
 
 
-def nla(index: str) -> list[NLAExplanation]:
+def nla(index: str, n: int) -> list[NLAExplanation]:
     api_key = os.environ["NEURONPEDIA_API_KEY"]
     feature = fetch_neuronpedia_feature(api_key, index)
     activations = sorted(
         (item for item in feature.get("activations", []) if item.get("maxValue", 0) > 0),
         key=lambda item: item["maxValue"],
         reverse=True,
-    )[:20]
+    )[:n]
     if not activations:
         raise ValueError(f"no activating examples for index={index}")
     max_activation = activations[0]["maxValue"]
@@ -151,9 +156,12 @@ def call_openrouter(model: str, messages: list[dict[str, str]]) -> str:
 
 
 def generate_explanation(body: dict) -> dict:
-    examples = nla(str(body["index"]))
+    n = int(body["n"])
+    if n < 1:
+        raise ValueError("n must be greater than 0")
+    examples = nla(str(body["index"]), n)
     messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": build_system_prompt(n)},
         {"role": "user", "content": build_user_prompt(examples)},
     ]
     explanation = parse_explanation(call_openrouter(body["explanationModelName"], messages))

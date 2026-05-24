@@ -11,12 +11,8 @@ from utils import DEFAULT_OUT_DIR, N_TRAIN, append_jsonl, load_record, read_json
 from server import (
     LAYER,
     MODEL_ID,
-    SYSTEM_PROMPT,
-    NLAExplanation,
-    build_user_prompt,
-    call_openrouter,
+    generate_explanation,
     load_env,
-    parse_explanation,
 )
 
 
@@ -26,12 +22,12 @@ DELPHI_THRESHOLD = 0.6
 DELPHI_TEMPERATURE = 0.7
 
 
-def baez_label(nla_record: dict, model: str) -> str:
-    examples = [NLAExplanation(**e) for e in nla_record["examples"][:N_TRAIN]]
-    return parse_explanation(call_openrouter(model, [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": build_user_prompt(examples)},
-    ]))
+def baez_label(index: int, model: str) -> str:
+    return generate_explanation({
+        "index": index,
+        "n": N_TRAIN,
+        "explanationModelName": model,
+    })["explanation"]
 
 
 async def delphi_label(raw_path: Path, model: str) -> str:
@@ -46,7 +42,6 @@ def generate_labels(out_dir: Path, model: str, methods: list[str]) -> None:
     features = read_jsonl(out_dir / "features.jsonl")
     if not features:
         raise ValueError(f"no features found in {out_dir / 'features.jsonl'}")
-    nla_by_key = {r["feature_key"]: r for r in read_jsonl(out_dir / "nla_examples.jsonl")}
     raw_dir, labels_path = out_dir / "raw", out_dir / "labels.jsonl"
     completed = {(r["feature_key"], r["method"], r.get("explanation_model"))
                  for r in read_jsonl(labels_path)}
@@ -59,7 +54,7 @@ def generate_labels(out_dir: Path, model: str, methods: list[str]) -> None:
                 continue
             try:
                 explanation = (
-                    baez_label(nla_by_key[feature["feature_key"]], model) if method == "baez"
+                    baez_label(feature["index"], model) if method == "baez"
                     else asyncio.run(delphi_label(raw_dir / f"feature_{feature['index']}.json", model))
                 )
             except Exception as error:
