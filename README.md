@@ -61,10 +61,10 @@ Experiment scripts write local artifacts under `data/experiments/<name>/`.
 ### 1. Sampling features
 
 
-Sample `50` random features (each feature must have at least 15 non-zero activation examples) from the `gemma-3-27b-it/41-gemmascope-2-res-262k` search space:
+Sample `40` random features (each feature must have at least 15 non-zero activation examples) from the `gemma-3-27b-it/41-gemmascope-2-res-262k` search space:
 
 ```sh
-python experiment/sample_features.py 50 --out-dir data/experiments/exp_1 --seed 0
+python experiment/sample_features.py 40 --out-dir data/experiments/exp_1 --seed 0
 ```
 
 ### 2. Generate NLA explanations
@@ -95,3 +95,26 @@ Score each (feature, label) with Delphi's `detection`, `fuzz`, and `embedding` s
 ```sh
 python experiment/score_labels.py --out-dir data/experiments/exp_1 --seed 0
 ```
+
+### 5. Analyze scores
+
+Generate a CSV recap and plots (boxplot + mean bar chart) grouped by label generation method:
+
+```sh
+python experiment/analyze_scores.py --exp-dir data/experiments/exp_1
+```
+
+Outputs under `data/experiments/<name>/`:
+- `scores_flat.csv` — one row per (feature, method)
+- `scores_summary_by_method.csv` — mean/std/median/min/max/count per method
+- `scores_boxplot.png`, `scores_mean_bar.png`
+
+### 6. Quantitative label comparison
+
+Embed each feature's `baez` and `delphi` labels and rank features by cosine distance between the two:
+
+```sh
+python experiment/analyze_quantitatively.py --exp-dir data/experiments/exp_1
+```
+
+Output: `label_distance__baez__vs__delphi.csv`, sorted by descending cosine distance.
